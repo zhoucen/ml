@@ -83,6 +83,9 @@ class KdTree(object):
 
             while search_tack:
                 item = search_tack.pop()
+                if item in near_list:
+                    continue
+
                 if dist(dot, item.dot[0]) < nearest_distance:  # 更新最邻近点
                     nearest_dot = item
                     nearest_distance = dist(dot, item.dot[0])
@@ -104,11 +107,12 @@ class KdTree(object):
                         search_tack.append(item.right)
 
             near_list.append(nearest_dot)
+        print near_list
 
 
 def initial():
     train_set = [((2, 3), 0), ((5, 4), 0), ((9, 6), 1), ((4, 7), 0), ((8, 1), 1), ((7, 2), 1)]  # 原始数据集
-    k = 1  # 最靠近的k个近邻有投票权
+    k = 2  # 最靠近的k个近邻有投票权
     dist = Euclidean_dist  # 距离计算函数
     dot = (8, 1.9)  # 需要预测的点
     kd_tree = KdTree(train_set)  # Kd Tree
