@@ -67,6 +67,7 @@ class KdTree(object):
         near_list = []
         for i in range(k):
             search_tack = []
+            has_search = []
             loc = self.root
             nearest_dot = loc
             nearest_distance = dist(dot, loc.dot[0])
@@ -83,18 +84,19 @@ class KdTree(object):
 
             while search_tack:
                 item = search_tack.pop()
-                if item in near_list:
+                if item in has_search:
                     continue
-
-                if dist(dot, item.dot[0]) < nearest_distance:  # 更新最邻近点
+                else:
+                    has_search.append(item)
+                if (dist(dot, item.dot[0]) < nearest_distance and item not in near_list)or nearest_dot in near_list:  # 更新最邻近点
                     nearest_dot = item
                     nearest_distance = dist(dot, item.dot[0])
 
-                if not item.dimension:
+                if item.dimension == None:
                     continue
 
-                if abs(dot[item.dimension] - item.dot[0][item.dimension]) < nearest_distance:
-                    if dot[item.dimension] <= nearest_dot.dot[0][nearest_dot.dimension]:
+                if abs(dot[item.dimension] - item.dot[0][item.dimension]) > nearest_distance:
+                    if dot[item.dimension] <= item.dot[0][item.dimension]:
                         if item.left:
                             search_tack.append(item.left)
                     else:
@@ -107,14 +109,14 @@ class KdTree(object):
                         search_tack.append(item.right)
 
             near_list.append(nearest_dot)
-        print near_list
+        return [dot.dot for dot in near_list]
 
 
 def initial():
     train_set = [((2, 3), 0), ((5, 4), 0), ((9, 6), 1), ((4, 7), 0), ((8, 1), 1), ((7, 2), 1)]  # 原始数据集
-    k = 2  # 最靠近的k个近邻有投票权
+    k = 3  # 最靠近的k个近邻有投票权
     dist = Euclidean_dist  # 距离计算函数
-    dot = (8, 1.9)  # 需要预测的点
+    dot = (1, 1.9)  # 需要预测的点
     kd_tree = KdTree(train_set)  # Kd Tree
     return train_set, k, dist, dot, kd_tree
 
@@ -126,18 +128,16 @@ def Euclidean_dist(dotA, dotB):
     return math.sqrt(distance)
 
 
-def KNN(train_set, k, dist, dot):
-    dist_list = []
-    for t_dot in train_set:
-        dist_list.append([t_dot[0],t_dot[1],dist(dot, t_dot[0])])
-    top_k = sorted(dist_list, cmp=lambda x,y:cmp(x[2], y[2]))[:k]
-    category = collections.Counter([ k[1] for k in top_k]).most_common(1)[0][0]
+def KNN(kd_tree, k, dist, dot):
+    near_list = kd_tree.search(dot, k, dist)
+    category = collections.Counter([k[1] for k in near_list]).most_common(1)[0][0]
     print "%s is %s" % (dot, category)
 
 
 def main():
     train_set, k, dist, dot, kd_tree = initial()
-    kd_tree.search(dot, k, dist)
+    KNN(kd_tree, k, dist, dot)
+
 
 
 if __name__ == '__main__':
